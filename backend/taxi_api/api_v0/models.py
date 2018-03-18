@@ -79,7 +79,7 @@ class Order(models.Model):
         on_delete=models.SET_NULL,
         null=True,
     )
-    car= models.ForeignKey(
+    car = models.ForeignKey(
         Car,
         on_delete=models.SET_NULL,
         null=True,
