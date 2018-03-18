@@ -67,14 +67,25 @@ class Order(models.Model):
     client = models.ForeignKey(
         Client,
         on_delete=models.SET_NULL,
+        null=True,
     )
     driver = models.ForeignKey(
         Driver,
         on_delete=models.SET_NULL,
+        null=True,
     )
     tariff = models.ForeignKey(
         Tariff,
         on_delete=models.SET_NULL,
+        null=True,
+    )
+    car= models.ForeignKey(
+        Car,
+        on_delete=models.SET_NULL,
+        null=True,
     )
     start_taxiing_time = models.DateTimeField(auto_now_add=True)
     stop_taxiing_time = models.DateTimeField()
+
+    def __str__(self):
+        return " "
