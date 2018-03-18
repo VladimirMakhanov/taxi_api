@@ -64,7 +64,7 @@ def client_detail(request, pk, format=None):
 def driver_list(request, format=None):
     if request.method == 'GET':
         drivers = Driver.objects.all()
-        serializer = DriverSerializer(drivers, many=True)
+        serializer = DriverSerializer(drivers)
         return Response(serializer.data)
 
     elif request.method == 'POST':

@@ -9,6 +9,7 @@ class Client(models.Model):
     """
 
     name = models.CharField(max_length=200)
+    phone = models.CharField(max_length=19, default='')
 
     def __str__(self):
         return self.name
@@ -39,6 +40,7 @@ class Car(models.Model):
         null=True,
         blank=True
     )
+    number = models.CharField(max_length=8, default='AAA 777')
 
     def __str__(self):
         return f"{self.name}, {self.description}"
