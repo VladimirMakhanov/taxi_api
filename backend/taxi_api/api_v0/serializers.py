@@ -59,7 +59,37 @@ class TariffSerializer(serializers.ModelSerializer):
 class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
-        fields = ('id', 'client', 'driver', 'tariff', 'car', 'start_taxiing_time', 'stop_taxiing_time')
+
+        # Start taxing time describe in model like `auto_now_add`, so exclude it
+        # start_taxiing_time = serializers.DateTimeField(required=False)
+
+        # This field should be written without user input
+        stop_taxiing_time = serializers.DateTimeField(required=False, allow_null=True)
+
+        fields = ('id', 'client', 'driver', 'tariff', 'car', 'stop_taxiing_time')
+
+    def get_other_pending_orders_of_client(self, value):
+        client_pending_orders = Client.objects.filter(pk=value).first()
+
+        if client_pending_orders is None:
+            return value
+
+        raise ValidationError('Client might have only one order in time')
+
+    def get_other_pending_orders_of_driver(self, value):
+        # Because there is OneToOne link between car and driver, we have a possibility do not checking car avalible :-)
+        driver_pending_orders = Driver.objects.filter(pk=value).first()
+
+        if driver_pending_orders is None:
+            return value
+
+        raise ValidationError('Driver might have only one order in time')
+
+    def create(self, validated_data):
+        client = validated_data.pop('client')
+        driver = validated_data.pop('driver')
+
+        return Order.objects.create(**validated_data)
 
 
 
