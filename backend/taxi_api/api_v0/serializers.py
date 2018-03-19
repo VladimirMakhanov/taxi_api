@@ -32,6 +32,7 @@ class CarSerializer(serializers.ModelSerializer):
         model = Car
         # fields = ('id', 'name', 'description', 'driver', 'number')
         fields = '__all__'
+
     def validate_number(self, value):
         """
         There is two patterns of car number. Check it
