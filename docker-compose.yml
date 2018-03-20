@@ -10,11 +10,11 @@ services:
   web:
     build: ./docker/web
     ports:
-      - "8000:8000"
+      - "9000:9000"
     working_dir: /project/taxi_api
     volumes:
       - ./backend:/project
-#    command: ["python", "manage.py", "runserver", "0.0.0.0:8000"]
-    command: "python manage.py runserver 0.0.0.0:8000"
-    depends_on:
-      - postgres
+    command: ["python", "manage.py", "runserver", "0.0.0.0:9000"]
+#    command: "python manage.py runserver 0.0.0.0:9000"
+#    depends_on:
+#      - postgres

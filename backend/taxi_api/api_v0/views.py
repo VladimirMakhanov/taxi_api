@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework import viewsets, status
 from api_v0.models import Client, Driver, Car, Tariff, Order
 from api_v0.serializers import ClientSerializer, DriverSerializer, CarSerializer, TariffSerializer, OrderSerializer
-
+from api_v0.services import ClientsService, SingleClientService
 
 # Create your views here.
 
@@ -18,20 +18,17 @@ def index(request):
 
 # Client section
 
+
 @api_view(['GET', 'POST'])
 def client_list(request, format=None):
     if request.method == 'GET':
-        clients = Client.objects.all()
-        serializer = ClientSerializer(clients, many=True)
-        return Response(serializer.data)
+        response = ClientsService().get_client_list()
+        return Response(response)
 
     elif request.method == 'POST':
         data = JSONParser().parse(request)
-        serializer = ClientSerializer(data=data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        response = ClientsService().post_client_list(data=data)
+        return Response(response)
 
 
 @api_view(['GET', 'PUT', 'DELETE'])
@@ -42,20 +39,17 @@ def client_detail(request, pk, format=None):
         return HttpResponse(status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'GET':
-        serializer = ClientSerializer(client)
-        return Response(serializer.data)
+        response = SingleClientService(client).get_client_detail()
+        return Response(response)
 
     elif request.method == 'PUT':
         data = JSONParser().parse(request)
-        serializer = ClientSerializer(data=data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        response = SingleClientService(client).put_client_detail(data=data)
+        return Response(response)
 
     elif request.method == 'DELETE':
-        client.delete()
-        return HttpResponse(status=status.HTTP_204_NO_CONTENT)
+        response = SingleClientService(client).delete_client_detail()
+        return HttpResponse(response)
 
 
 # Driver section
