@@ -86,10 +86,45 @@ def driver_detail(request, pk, format=None):
         return HttpResponse(response)
 
 
-# Tariff section
+# Car section
 
 @api_view(['GET', 'POST'])
 def car_list(request, format=None):
+    if request.method == 'GET':
+        response = CarsService().get_car_list()
+        return Response(response)
+
+    elif request.method == 'POST':
+        data = JSONParser().parse(request)
+        response = CarsService().post_car_list(data=data)
+        return Response(response)
+
+
+@api_view(['GET', 'PUT', 'DELETE'])
+def car_detail(request, pk, format=None):
+    try:
+        car = Car.objects.get(pk=pk)
+    except Car.DoesNotExist:
+        return HttpResponse(status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'GET':
+        response = SingleCarService(car).get_car_detail()
+        return Response(response)
+
+    elif request.method == 'PUT':
+        data = JSONParser().parse(request)
+        response = SingleCarService(car).put_car_detail(data=data)
+        return Response(response)
+
+    elif request.method == 'DELETE':
+        response = SingleCarService(car).delete_car_detail()
+        return HttpResponse(response)
+
+
+# Tariff section
+
+@api_view(['GET', 'POST'])
+def tariff_list(request, format=None):
     if request.method == 'GET':
         response = TariffsService().get_tariff_list()
         return Response(response)
@@ -147,10 +182,19 @@ def order_detail(request, pk, format=None):
         return Response(response)
 
     elif request.method == 'PUT':
-        data = JSONParser().parse(request)
-        response = SingleOrderService(order).put_order_detail(data=data)
+        # data = JSONParser().parse(request)
+        response = SingleOrderService(order).put_order_detail(pk=pk)
         return Response(response)
 
     elif request.method == 'DELETE':
         response = SingleOrderService(order).delete_order_detail()
         return HttpResponse(response)
+
+@api_view(['GET'])
+def order_stop(request, pk, format=None):
+    try:
+        order = Order.objects.get(pk=pk)
+    except:
+        return HttpResponse(status=status.HTTP_404_NOT_FOUND)
+
+

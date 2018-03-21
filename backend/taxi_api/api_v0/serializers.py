@@ -11,8 +11,10 @@ class ClientSerializer(serializers.ModelSerializer):
 
     def validate_phone(self, value):
         pattern = re.compile(r"^\+[0-9]{3}\ \([0-9]{2}\)\ [0-9]{3}\ [0-9]{2}\ [0-9]{2}$")
+
         if pattern.match(value):
             return value
+
         raise ValidationError("Phone number should be like +998 (90) 111 11 11")
 
     def create(self, validated_data):
@@ -30,8 +32,9 @@ class DriverSerializer(serializers.ModelSerializer):
 class CarSerializer(serializers.ModelSerializer):
     class Meta:
         model = Car
-        # fields = ('id', 'name', 'description', 'driver', 'number')
-        fields = '__all__'
+        fields = ('id', 'name', 'description', 'driver', 'number')
+        number = serializers.CharField(max_length=8, required=False, default='AAA 890')
+        # fields = '__all__'
 
     def validate_number(self, value):
         """
@@ -42,12 +45,15 @@ class CarSerializer(serializers.ModelSerializer):
 
         if pattern1.match(value) or pattern2.match(value):
             return value
+
         raise ValidationError("Car number should be like AAA 777 or AA 777 A")
 
-    def create(self, validated_data):
-        phone = validated_data.pop('number')
-
-        return Client.objects.create(**validated_data)
+    # def create(self, validated_data):
+    #     number = validated_data.pop('number', )
+    #
+    #     return validated_data
+    #
+    #     # return Car.objects.create(**validated_data)
 
 
 class TariffSerializer(serializers.ModelSerializer):
@@ -57,39 +63,84 @@ class TariffSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
+
+    client = serializers.PrimaryKeyRelatedField(allow_null=False, queryset=Client.objects.get_queryset())
+    driver = serializers.PrimaryKeyRelatedField(allow_null=False, queryset=Driver.objects.get_queryset())
+    tariff = serializers.PrimaryKeyRelatedField(allow_null=False, queryset=Tariff.objects.get_queryset())
+    car = serializers.PrimaryKeyRelatedField(allow_null=False, queryset=Car.objects.get_queryset())
+
+    # This field should be written without user input
+    stop_taxiing_time = serializers.DateTimeField(required=False, allow_null=True)
+
     class Meta:
         model = Order
 
         # Start taxing time describe in model like `auto_now_add`, so exclude it
-        # start_taxiing_time = serializers.DateTimeField(required=False)
 
-        # This field should be written without user input
-        stop_taxiing_time = serializers.DateTimeField(required=False, allow_null=True)
+        fields = ('id', 'client', 'driver', 'tariff', 'car', 'start_taxiing_time', 'stop_taxiing_time')
 
-        fields = ('id', 'client', 'driver', 'tariff', 'car', 'stop_taxiing_time')
+    def validate_client(self, value):
 
-    def get_other_pending_orders_of_client(self, value):
-        client_pending_orders = Client.objects.filter(pk=value).first()
+        # try:
+        #     client = Client.objects.get(pk=value)
+        # except Client.DoesNotExist:
+        #     raise ValidationError("Client doesn't exist")
 
-        if client_pending_orders is None:
-            return value
+        try:
+            client_pending_orders = Order.objects.get(client_id=value, stop_taxiing_time__isnull=True)
+        except:
+            client_pending_orders = None
 
-        raise ValidationError('Client might have only one order in time')
+        if client_pending_orders is not None:
+            raise ValidationError('Client might have only one order in time')
 
-    def get_other_pending_orders_of_driver(self, value):
+        return value
+
+    def validate_driver(self, value):
+
+        # try:
+        #     driver = Driver.objects.get(pk=value)
+        # except Driver.DoesNotExist:
+        #     raise ValidationError("Driver doesn't exist")
+
         # Because there is OneToOne link between car and driver, we have a possibility do not checking car avalible :-)
-        driver_pending_orders = Driver.objects.filter(pk=value).first()
+        try:
+            driver_pending_orders = Order.objects.get(driver_id=value, stop_taxiing_time__isnull=True)
+        except:
+            driver_pending_orders = None
 
-        if driver_pending_orders is None:
+        if driver_pending_orders is not None:
+            raise ValidationError('Driver might have only one order in time')
+
+        return value
+
+    def validate_tariff(self, value):
+        if value is None:
+            raise ValidationError("Tariff doesn't exist")
+
+        else:
             return value
 
-        raise ValidationError('Driver might have only one order in time')
+    def validate_car(self, value):
+        if value is None:
+            raise ValidationError("Car doesn't exist")
 
-    def create(self, validated_data):
+        else:
+            return value
+
+    # def validate_stop_taxiing_time(self, value):
+    #     if self.stop_taxiing_time is not None:
+    #         raise ValidationError('Order is finished')
+    #
+    #     return value
+
+    def create(self, validated_data) -> Driver:
         client = validated_data.pop('client')
         driver = validated_data.pop('driver')
-
-        return Order.objects.create(**validated_data)
-
-
-
+        tariff = validated_data.pop('tariff')
+        return Order.objects.create(
+            client=client,
+            driver=driver,
+            tariff=tariff,
+            **validated_data,
+        )

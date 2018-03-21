@@ -84,10 +84,10 @@ class Order(models.Model):
     car = models.ForeignKey(
         Car,
         on_delete=models.SET_NULL,
-        null=True,
+        null=True
     )
     start_taxiing_time = models.DateTimeField(auto_now_add=True)
-    stop_taxiing_time = models.DateTimeField()
+    stop_taxiing_time = models.DateTimeField(null=True)
 
     def __str__(self):
         return " "

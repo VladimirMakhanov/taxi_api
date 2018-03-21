@@ -1,7 +1,7 @@
-from django.http import HttpResponse
 from rest_framework import status
 from api_v0.models import Client, Driver, Car, Tariff, Order
 from api_v0.serializers import ClientSerializer, DriverSerializer, CarSerializer, TariffSerializer, OrderSerializer
+from datetime import datetime
 
 
 # Client section
@@ -199,11 +199,20 @@ class SingleOrderService:
         serializer = OrderSerializer(self.order)
         return serializer.data
 
-    def put_order_detail(self, data):
-        serializer = OrderSerializer(data=data)
+    def put_order_detail(self, pk):
+        order = Order.objects.get(pk=pk)
+        serializer = OrderSerializer(order, data={'stop_taxiing_time': datetime.now()}, partial=True)
+        # serializer = OrderSerializer(data={
+        #     'car': order.car.pk,
+        #     'client': order.client.pk,
+        #     'driver':order.driver.pk,
+        #     'tariff':order.tariff.pk,
+        #     'start_taxiing_time':order.start_taxiing_time,
+        #     'stop_taxiing_time':order.stop_taxiing_time,
+        # })
 
         if serializer.is_valid():
-            serializer.save()
+            serializer.update(order, validated_data=serializer.validated_data)
             return serializer.data, status.HTTP_201_CREATED
 
         return serializer.errors, status.HTTP_400_BAD_REQUEST
@@ -212,3 +221,4 @@ class SingleOrderService:
 
         self.order.delete()
         return status.HTTP_204_NO_CONTENT
+
